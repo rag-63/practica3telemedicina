@@ -1,8 +1,16 @@
 const path = require('path');
 
-var conexion = require("./conexion_mysql.js")
 var express = require("express");
 var app = express();
+
+// 1. Importar el cliente de Supabase
+const { createClient } = require('@supabase/supabase-js');
+
+// 2. Configurar con tu URL y tu Public Key (anon key)
+const supabaseUrl = 'https://lwxdcwmnkrjkbjnyxyeu.supabase.co';
+const supabaseKey = 'sb_publishable__ThYiCsa8TuXY3HDmQ5Ouw_zyNLEpyg'; // <--- Pega aquí tu public key
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 var jwt = require("jwt-simple"); // PRÁCTICA 3 - PARTE 2: librería para crear y leer tokens JWT
 var clave = "claveSecretaTelemedicina"; // clave para codificar / decodificar el token
 
