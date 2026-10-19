@@ -32,8 +32,9 @@ app.post("/api/gestores/login", function(req,res){
   var usuario = req.body.usuario;
   var password = req.body.password;
   //Cargar la base de datos para comprobar gestor existe
-  var sql = "SELECT * FROM gestores ";
-  conexion.query(sql, function (err, gestores) {
+  supabase.from('gestores').select('*').then(function (respuesta) {
+        var err = respuesta.error;
+        var gestores = respuesta.data;
         if (err) {
             console.log("Error al realizar la select", err);
             res.status(500).json("Error al realizar la consulta");
@@ -61,8 +62,9 @@ app.post("/api/gestores/login", function(req,res){
 app.post('/api/gestores', function(req, res){
   var usuario = req.body.usuario;
   var existe = false;
-  var sql = "SELECT * FROM gestores";
-  conexion.query(sql, function (err, gestores) {
+  supabase.from('gestores').select('*').then(function (respuesta) {
+        var err = respuesta.error;
+        var gestores = respuesta.data;
         if (err) {
             console.log("Error al realizar la select", err);
             res.status(500).json("Error al realizar la consulta");
@@ -76,14 +78,15 @@ app.post('/api/gestores', function(req, res){
               }
             }
             if (existe == false){
-              var sqlInsert = "INSERT INTO gestores (nombre, apellidos, usuario, password) VALUES ('" + req.body.nombre + "', '" + req.body.apellidos + "', '" + req.body.usuario + "', '" + req.body.password + "')";
-              conexion.query(sqlInsert, function (err, resultado) {
+              supabase.from('gestores').insert({ nombre: req.body.nombre, apellidos: req.body.apellidos, usuario: req.body.usuario, password: req.body.password }).select().then(function (respuesta2) {
+              var err = respuesta2.error;
+              var resultado = respuesta2.data;
               if (err) {
                 console.log("Error al realizar el insert", err);
                 res.status(500).json("Error al realizar la insercion");
               } else {
                   console.log("Gestor insertado:", resultado);
-                  res.status(201).json(resultado.insertId);
+                  res.status(201).json(resultado[0].id);
               }
               });
             }
@@ -125,8 +128,9 @@ app.use("/api", function (req, res, next) {
 // 1. Ubicaciones, Categorías y Modelos (obtención de arrays)
 
 app.get("/api/ubicaciones", function(req, res){
-  var sql = "SELECT * FROM ubicaciones";
-  conexion.query(sql, function (err, ubicaciones) {
+  supabase.from('ubicaciones').select('*').then(function (respuesta) {
+        var err = respuesta.error;
+        var ubicaciones = respuesta.data;
         if (err) {
             console.log("Error al realizar la select", err);
             res.status(500).json("Error al realizar la consulta");
@@ -138,8 +142,9 @@ app.get("/api/ubicaciones", function(req, res){
 });
 
 app.get("/api/categorias", function(req, res){
-  var sql = "SELECT * FROM categorias";
-  conexion.query(sql, function (err, categorias) {
+  supabase.from('categorias').select('*').then(function (respuesta) {
+        var err = respuesta.error;
+        var categorias = respuesta.data;
         if (err) {
             console.log("Error al realizar la select", err);
             res.status(500).json("Error al realizar la consulta");
@@ -151,8 +156,9 @@ app.get("/api/categorias", function(req, res){
 });
 
 app.get("/api/modelos", function(req, res){
-  var sql = "SELECT * FROM modelos";
-  conexion.query(sql, function (err, modelos) {
+  supabase.from('modelos').select('*').then(function (respuesta) {
+        var err = respuesta.error;
+        var modelos = respuesta.data;
         if (err) {
             console.log("Error al realizar la select", err);
             res.status(500).json("Error al realizar la consulta");
@@ -164,8 +170,9 @@ app.get("/api/modelos", function(req, res){
 });
 
 app.get("/api/sanitarios", function(req, res){
-  var sql = "SELECT * FROM sanitarios";
-  conexion.query(sql, function (err, sanitarios) {
+  supabase.from('sanitarios').select('*').then(function (respuesta) {
+        var err = respuesta.error;
+        var sanitarios = respuesta.data;
         if (err) {
             console.log("Error al realizar la select", err);
             res.status(500).json("Error al realizar la consulta");
@@ -177,8 +184,9 @@ app.get("/api/sanitarios", function(req, res){
 });
 
 app.get("/api/reservas", function(req,res){
-    var sql = "SELECT * FROM reservas";
-    conexion.query(sql, function (err, reservas){
+    supabase.from('reservas').select('*').then(function (respuesta) {
+        var err = respuesta.error;
+        var reservas = respuesta.data;
         if (err){
             console.log("Error al realizar la select", err);
             res.status(500).json("Error al realizar la consulta");
@@ -194,8 +202,9 @@ app.get("/api/reservas", function(req,res){
 
 app.get("/api/gestores/:id", function (req, res) {
     var idGestor = req.params.id;
-    var sql = "SELECT * FROM gestores WHERE id = " + idGestor;
-    conexion.query(sql, function (err, gestores) {
+    supabase.from('gestores').select('*').eq('id', idGestor).then(function (respuesta) {
+        var err = respuesta.error;
+        var gestores = respuesta.data;
         if (err) {
             console.log("Error al realizar la select", err);
             res.status(500).json("Error al realizar la consulta");
@@ -219,9 +228,9 @@ app.put("/api/gestores/:id", function(req, res){
   var nuevoUsuario = req.body.usuario;
 
   // 1. Comprobar si otro gestor (con id distinto) ya tiene ese usuario
-  var sqlComprobar = "SELECT * FROM gestores WHERE usuario = '" + nuevoUsuario + "' AND id != " + idGestor;
-
-  conexion.query(sqlComprobar, function (err, existentes) {
+  supabase.from('gestores').select('*').eq('usuario', nuevoUsuario).neq('id', idGestor).then(function (respuesta) {
+    var err = respuesta.error;
+    var existentes = respuesta.data;
     if (err) {
       console.log("Error al comprobar el usuario", err);
       return res.status(500).json("Error al realizar la consulta");
@@ -233,13 +242,8 @@ app.put("/api/gestores/:id", function(req, res){
     }
 
     // 2. Si no hay conflicto, hacer el update
-    var sql = "UPDATE gestores SET nombre = '"
-        + req.body.nombre + "', apellidos = '"
-        + req.body.apellidos + "', usuario = '"
-        + req.body.usuario + "', password = '"
-        + req.body.password + "' WHERE id = " + idGestor;
-
-    conexion.query(sql, function (err2, resultado) {
+    supabase.from('gestores').update({ nombre: req.body.nombre, apellidos: req.body.apellidos, usuario: req.body.usuario, password: req.body.password }).eq('id', idGestor).then(function (respuesta2) {
+      var err2 = respuesta2.error;
       if (err2) {
         console.log("Error al realizar el update", err2);
         return res.status(500).json("Error al realizar la actualización");
@@ -255,8 +259,9 @@ app.put("/api/gestores/:id", function(req, res){
 // Obtiene objeto con datos sanitario sin codigo acceso
 app.get("/api/sanitarios/:id", function(req,res){
   var idSanitario = req.params.id;
-    var sql = "SELECT * FROM sanitarios WHERE id = " + idSanitario;
-    conexion.query(sql, function (err, sanitarios) {
+    supabase.from('sanitarios').select('*').eq('id', idSanitario).then(function (respuesta) {
+        var err = respuesta.error;
+        var sanitarios = respuesta.data;
         if (err) {
             console.log("Error al realizar la select", err);
             res.status(500).json("Error al realizar la consulta");
@@ -278,22 +283,25 @@ app.get("/api/sanitarios/:id", function(req,res){
 // 4. Gestión de Recursos
 // Obtener todos los recursos: cat, mod, ubi, estado
 app.get("/api/recursos", function (req, res) {
-    var sql = "SELECT * FROM recursos WHERE 1=1"; 
+    var consulta = supabase.from('recursos').select('*');
 
-    if (req.query.modelo && req.query.modelo !== "Todos") {
-        sql += " AND modelo = " + req.query.modelo;
-    }
     if (req.query.categoria && req.query.categoria !== "Todos") {
-        sql += " AND modelo IN (SELECT id FROM modelos WHERE categoria = " + req.query.categoria + ")";
+        // la categoría está en la tabla modelos: unimos recursos con su modelo y filtramos por su categoría
+        consulta = supabase.from('recursos').select('*, modelos!inner(categoria)').eq('modelos.categoria', req.query.categoria);
+    }
+    if (req.query.modelo && req.query.modelo !== "Todos") {
+        consulta = consulta.eq('modelo', req.query.modelo);
     }
     if (req.query.ubicacion && req.query.ubicacion !== "Todos") {
-        sql += " AND ubicacion = " + req.query.ubicacion;
+        consulta = consulta.eq('ubicacion', req.query.ubicacion);
     }
     if (req.query.estado && req.query.estado !== "Todos") {
-        sql += " AND estado = " + req.query.estado;
+        consulta = consulta.eq('estado', req.query.estado);
     }
 
-    conexion.query(sql, function (err, recursos) {
+    consulta.then(function (respuesta) {
+        var err = respuesta.error;
+        var recursos = respuesta.data;
         if (err) {
             console.log("Error al realizar la select", err);
             res.status(500).json("Error al realizar la consulta");
@@ -307,8 +315,9 @@ app.get("/api/recursos", function (req, res) {
 // Obtiene datos de un recurso 
 app.get("/api/recursos/:id", function (req, res) {
     var idRecursos = req.params.id;
-    var sql = "SELECT * FROM recursos WHERE id = " + idRecursos;
-    conexion.query(sql, function (err, recursos) {
+    supabase.from('recursos').select('*').eq('id', idRecursos).then(function (respuesta) {
+        var err = respuesta.error;
+        var recursos = respuesta.data;
         if (err) {
             console.log("Error al realizar la select", err);
             res.status(500).json("Error al realizar la consulta");
@@ -326,15 +335,17 @@ app.get("/api/recursos/:id", function (req, res) {
 
 // Crea un recurso 
 app.post("/api/recursos", function (req, res){
-  var sql = "INSERT INTO recursos (modelo, ubicacion, numero_serie, estado) VALUES (" + req.body.modelo + "," + req.body.ubicacion + ",'" +  req.body.numero_serie + "', " + req.body.estado + ")";    
-  conexion.query(sql, function (err, resultado) {
+  supabase.from('recursos').insert({ modelo: req.body.modelo, ubicacion: req.body.ubicacion, numero_serie: req.body.numero_serie, estado: req.body.estado }).select().then(function (respuesta) {
+        var err = respuesta.error;
+        var resultado = respuesta.data;
         if (err) {
             console.log("Error al realizar el insert", err);
             res.status(500).json("Error al realizar la insercion");
         } else {
             // Queremos que devuelva el recurso entero junto con el nuevo id
-            var sqlId = "SELECT * FROM recursos WHERE id = " + resultado.insertId;
-            conexion.query(sqlId, function (error, recursoCreado) {
+            supabase.from('recursos').select('*').eq('id', resultado[0].id).then(function (respuesta2) {
+              var error = respuesta2.error;
+              var recursoCreado = respuesta2.data;
               if (error) {
                   console.log("Error al realizar la select", error);
                   res.status(500).json("Error al realizar la consulta");
@@ -350,12 +361,9 @@ app.post("/api/recursos", function (req, res){
 // Actualizar
 
 app.put("/api/recursos/:id", function (req, res) {
-    var sql = "UPDATE recursos SET modelo = "
-        + req.body.modelo + ", ubicacion = "
-        + req.body.ubicacion + ", numero_serie = '"
-        + req.body.numero_serie + "', estado = "
-        + req.body.estado + " WHERE id = " + req.params.id;
-    conexion.query(sql, function (err, resultado) {
+    supabase.from('recursos').update({ modelo: req.body.modelo, ubicacion: req.body.ubicacion, numero_serie: req.body.numero_serie, estado: req.body.estado }).eq('id', req.params.id).then(function (respuesta) {
+        var err = respuesta.error;
+        var resultado = respuesta.data;
         if (err) {
             console.log("Error al realizar el update", err);
             res.status(500).json("Error al realizar la actualización");
@@ -369,8 +377,9 @@ app.put("/api/recursos/:id", function (req, res) {
 // Borra un recurso
 
 app.delete("/api/recursos/:id", function (req, res) {
-    var sql = "DELETE FROM recursos WHERE id = " + req.params.id;
-    conexion.query(sql, function (err, resultado) {
+    supabase.from('recursos').delete().eq('id', req.params.id).then(function (respuesta) {
+        var err = respuesta.error;
+        var resultado = respuesta.data;
         if (err) {
             console.log("Error al realizar el delete", err);
             res.status(500).json("Error al realizar el borrado");
@@ -386,8 +395,9 @@ app.delete("/api/recursos/:id", function (req, res) {
 // Obtiene las RESERVAS de un recurso
 app.get("/api/recursos/:id/reservas", function (req, res) {
     var idRecurso = req.params.id;
-    var sql = "SELECT * FROM reservas WHERE recurso = " + idRecurso;
-    conexion.query(sql, function (err, reservas) {
+    supabase.from('reservas').select('*').eq('recurso', idRecurso).then(function (respuesta) {
+        var err = respuesta.error;
+        var reservas = respuesta.data;
         if (err) {
             console.log("Error al realizar la select", err);
             res.status(500).json("Error al obtener las reservas");
@@ -401,8 +411,9 @@ app.get("/api/recursos/:id/reservas", function (req, res) {
 // Obtiene las RESEÑAS de un recurso
 app.get("/api/recursos/:id/resenyas", function(req, res){
   var idRecurso = req.params.id;
-    var sql = "SELECT * FROM resenyas WHERE recurso = " + idRecurso;
-    conexion.query(sql, function (err, resenyas) {
+    supabase.from('resenyas').select('*').eq('recurso', idRecurso).then(function (respuesta) {
+        var err = respuesta.error;
+        var resenyas = respuesta.data;
         if (err) {
             console.log("Error al realizar la select", err);
             res.status(500).json("Error al realizar la consulta");
@@ -422,5 +433,3 @@ const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Servidor de Gestión Hospitalaria ejecutándose en http://localhost:${PORT}`);
 });
-
-
