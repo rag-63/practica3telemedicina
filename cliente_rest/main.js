@@ -532,13 +532,20 @@ function comprobarReservaValida(datos, id_area){
   var valida = false;
   // comprueba el area primero y si es correcta comprobará los datos
   if (id_area && id_area>0 && id_area<19){
-    if (datos && datos.nombre && datos.apellidos && datos.categoría && datos.fec_pet && datos.horas_estimadas){
+    if (datos &&
+        typeof datos.nombre == "string" && datos.nombre.trim() != "" &&
+        typeof datos.apellidos == "string" && datos.apellidos.trim() != "" &&
+        typeof datos.categoría == "string" && datos.categoría.trim() != "" &&
+        typeof datos.fec_pet == "string" && datos.fec_pet.trim() != "" &&
+        !Number.isNaN(Date.parse(datos.fec_pet)) &&
+        datos.horas_estimadas != null &&
+        Number.isFinite(Number(datos.horas_estimadas)) &&
+        Number(datos.horas_estimadas) > 0){
     valida = true;
   }
   } 
   return valida
 }
-
 // GET para obtener los datos del ministerio, limpiarlos y enseñarlos en la tabla
 function cargarReservasMinisterio() {
   // se hace un array con cada area de la 1 a la 18 y se le asigna un contador a 0: {1:0, 2:0, ...}
