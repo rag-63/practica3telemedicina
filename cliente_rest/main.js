@@ -601,6 +601,7 @@ function rellenarTabla(conteoPorArea){
 
     for (var i = 0; i < listaRanking.length; i++) {
       var fila = "<tr>" +
+        "<td>" + (i + 1) + "</td>" +
         "<td>" + listaRanking[i].nombre_area + "</td>" +
         "<td>" + listaRanking[i].total + "</td>" +
         "</tr>";
