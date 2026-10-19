@@ -43,8 +43,11 @@ wss.on('connection', function(ws) {
                         datos_msg.nombreModelo.toUpperCase() + ' CON CÓDIGO ' +
                         datos_msg.numSerie;
 
+            
             // Buscar qué sanitarios tienen reserva activa (no finalizada) de ese recurso
-            conexionBD.query("SELECT sanitario FROM reservas WHERE fecha_inicio IS NOT NULL AND fecha_fin IS NULL AND recurso = " + idRecurso, function(err, reservas){
+            supabase.from('reservas').select('sanitario').not('fecha_inicio', 'is', null).is('fecha_fin', null).eq('recurso', idRecurso).then(function (respuesta) {
+                var err = respuesta.error;
+                var reservas = respuesta.data;
                 if (err){
                     console.log("Error al consultar reservas activas en BD:", err);
                     return;
