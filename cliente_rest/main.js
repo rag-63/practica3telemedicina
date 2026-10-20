@@ -567,6 +567,7 @@ function cargarReservasMinisterio() {
                 // dividir los bloques del array: id_area, fecha y datos (nombre,apellidos...)
                 var id_area = datosMinisterio[i].id_area;
                 var todasLasReservas =  datosMinisterio[i].datos;
+                if (!Array.isArray(todasLasReservas)) continue; // si un envío viene sin datos, lo saltamos
 
                 for (var j = 0; j < todasLasReservas.length; j++){
                   // para cada reserva comprobar si sus parámetros son válidos.Si valida = true, aumenta ya el contador del área correspondiente
