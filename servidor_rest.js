@@ -10,7 +10,7 @@ const { createClient } = require('@supabase/supabase-js');
 const supabaseUrl = 'https://lwxdcwmnkrjkbjnyxyeu.supabase.co';
 const supabaseKey = 'sb_publishable__ThYiCsa8TuXY3HDmQ5Ouw_zyNLEpyg'; // <--- Pega aquí tu public key
 const supabase = createClient(supabaseUrl, supabaseKey);
-
+//Antes de esto, instalo npm install jwt-simple
 var jwt = require("jwt-simple"); // PRÁCTICA 3 - PARTE 2: librería para crear y leer tokens JWT
 var clave = "claveSecretaTelemedicina"; // clave para codificar / decodificar el token
 
@@ -44,11 +44,11 @@ app.post("/api/gestores/login", function(req,res){
               if (gestores[i].usuario == usuario && gestores[i].password == password){
                 console.log("Login correcto");
                 // Crear el token con el id del gestor y la fecha en la que caduca
-                var contenido = {
-                usuario: gestores[i].id,
+                var contenido = { //lo que voy a meter dentro del token
+                usuario: gestores[i].id, //id del gestor que ha hecho el login
                 expira: Date.now() + 60 * 60 * 1000 // caduca dentro de 1 hora (en milisegundos)
                 };
-                var token = jwt.encode(contenido, clave);
+                var token = jwt.encode(contenido, clave); //coge el contenido, lo codifica y lo firma con la clave
                 return res.status(200).json({ idGestor: gestores[i].id, token: token }) //Login correcto, devuelve id del gestor y el token
               }
             }
@@ -94,24 +94,24 @@ app.post('/api/gestores', function(req, res){
         });
 })
 
-// PRÁCTICA 3 - PARTE 2: COMPROBACIÓN DEL TOKEN
+// PRÁCTICA 3 - PARTE 2: COMPROBACIÓN DEL TOKEN es como un portero
 // Todas las rutas /api que estén DEBAJO de este app.use necesitan un token válido.
 // Si el token no es correcto, se responde con error y no se llega a la ruta.
-app.use("/api", function (req, res, next) {
+app.use("/api", function (req, res, next) { //se ejecuta para cualquier peticion que empiece por /api
   var token = req.query.token; // el token viene en la URL: /api/recursos?token=XXXX
-  if (!token) {
+  if (!token) {//COMPROBACION 1. Hay token?
     return res.status(401).json("No se ha encontrado token");
   }  
 
   // Decodificar el token (si alguien lo ha modificado o la clave no coincide, da error)
-  try {
+  try { //COMPROBACION 2. es un token valido?
     var contenidoToken = jwt.decode(token, clave);
-  } catch (error) {
+  } catch (error) { //captura el error para no petar
     return res.status(401).json("El token es incorrecto");
   }
 
   // Comprobar que el token tiene el formato que nosotros creamos
-  if (!contenidoToken.usuario || !contenidoToken.expira) {
+  if (!contenidoToken.usuario || !contenidoToken.expira) { //COMPROBACION 3. formato correcto?
     return res.status(401).json("El formato del token no es adecuado");
   }
 
@@ -121,7 +121,7 @@ app.use("/api", function (req, res, next) {
   }
 
   // Todo correcto: next() deja pasar la petición a la ruta que corresponda
-  next();
+  next(); 
 });
 // RUTAS PRIVADAS (necesitan token)
 
