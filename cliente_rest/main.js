@@ -5,7 +5,7 @@ let recursoSeleccionadoId = null;
 let categoriasById = {};
 let modelosById = {};
 let ubicacionesById = {};
-
+//empieza en null porque al abrir la pagina aún no se ha hecho el login
 let token = null; // PRÁCTICA 3 - PARTE 2: token JWT que nos da el servidor al hacer login
 
 // Añade el token al final de la URL: /api/recursos -> /api/recursos?token=XXXX
@@ -48,7 +48,7 @@ function login() {
     }
 
     idGestorActual = r.idGestor;
-    token = r.token; // guardamos el token para usarlo en el resto de peticiones
+    token = r.token; // guardamos el token para usarlo en el resto de peticiones.
 
       rest("GET", conToken("/api/gestores/" + idGestorActual), null, function(status2, datos) {      
         if (status2 < 200 || status2 >= 300) {
@@ -90,7 +90,7 @@ function cancelarRegistro(){
 
 function salirDeInicio(){
     idGestorActual = null;
-    token = null; // al salir, borramos el token
+    token = null; // al salir del inicio, borro el token
     if (ws) ws.close();
     navegar("vista-login");
 }
@@ -532,15 +532,15 @@ function comprobarReservaValida(datos, id_area){
   var valida = false;
   // comprueba el area primero y si es correcta comprobará los datos
   if (id_area && id_area>0 && id_area<19){
-    if (datos &&
-        typeof datos.nombre == "string" && datos.nombre.trim() != "" &&
+    if (datos && //comprueba que la reserva exista
+        typeof datos.nombre == "string" && datos.nombre.trim() != "" && //comprueba que sea un texto y que no este vacio ni sean solo espacios
         typeof datos.apellidos == "string" && datos.apellidos.trim() != "" &&
         typeof datos.categoría == "string" && datos.categoría.trim() != "" &&
         typeof datos.fec_pet == "string" && datos.fec_pet.trim() != "" &&
-        !Number.isNaN(Date.parse(datos.fec_pet)) &&
-        datos.horas_estimadas != null &&
-        Number.isFinite(Number(datos.horas_estimadas)) &&
-        Number(datos.horas_estimadas) > 0){
+        !Number.isNaN(Date.parse(datos.fec_pet)) && //convierte la fecha de peticion a fecha, si no puede pregunta si es NaN y si lo es no es válido
+        datos.horas_estimadas != null && //comprueba que las horas existan y no sean null
+        Number.isFinite(Number(datos.horas_estimadas)) && // que las horas estimadas sean numeros y finitos
+        Number(datos.horas_estimadas) > 0){ //que las horas estimadas no sean negativas
     valida = true;
   }
   } 
@@ -555,9 +555,9 @@ function cargarReservasMinisterio() {
     }
   // hacemos una petición get al ministerio con fecth
   // devuelve un json con los datos y si no lo consigue lanza un error
-  fetch("https://undefined.ua.es/telemedicina/api/datos")
-        .then(function (respuesta) {
-            return respuesta.json();
+  fetch("https://undefined.ua.es/telemedicina/api/datos") //busca los datos, la respuesta tarda en llegar, mientras se ejecuta el resto del codigo
+        .then(function (respuesta) { //la respuesta llega como texto, 
+            return respuesta.json(); //la convierte en objeto de JS para poder trabajar con ella
         })
         .then(function (datosMinisterio) {
             console.log("Datos recibidos del Ministerio:", datosMinisterio);
@@ -590,15 +590,15 @@ function rellenarTabla(conteoPorArea){
 
   // Recorremos directamente los números de área del 1 al 18
   for (var i = 1; i <= 18; i++) {
-      listaRanking.push({
+      listaRanking.push({ //añade una fila a la tabla con area y total de reservas de ese area
           nombre_area: AREAS_MEDICAS[i], // Sacamos el nombre directamente
           total: conteoPorArea[i]        // Sacamos el total de ese número
       });
   }
 
   // 2. Ordenar de mayor a menor según el número total de reservas
-  listaRanking.sort(function (a, b) {
-      return b.total - a.total;
+  listaRanking.sort(function (a, b) {//con el sort se me ordena la lista
+      return b.total - a.total; //coge parejas de elementos, si b>a; b va primero. Si a >b;a va primero. Es asi porque si fuera a-b se ordenaria la tabla de menor a mayor.
   });
 
   // 3. Buscar la tabla en el HTML y añadir las filas
@@ -642,10 +642,10 @@ function rellenarTabla(conteoPorArea){
 */
 
 function enviarDatosAlMinisterio() {
-  let reservasValidas = [];
+  let reservasValidas = []; //lista vacia donde voy a meter las reservas validas
   let peticionesPendientes = 0; // 1. Declarar aquí para que comprobarYEnviar la detecte
-
-  rest("GET", conToken("/api/recursos"), null, function(status, recursos) {
+  //me cuenta las peticiones que se han mandado y no se han respondido, en el momento en el que este en 0, puedo hacer el envio al ministerio
+  rest("GET", conToken("/api/recursos"), null, function(status, recursos) { //funcion para pedir los recursos
     if (status != 200 || !recursos) {
       console.log("Error cargando recursos locales");
       return;
@@ -653,15 +653,15 @@ function enviarDatosAlMinisterio() {
 
     for (let i = 0; i < recursos.length; i++) {
       // Búsqueda segura para evitar errores si mod es undefined
-      let mod = modelosById[String(recursos[i].modelo)];
-      let cat = mod ? categoriasById[mod.categoria] : null;
-      let nombreCategoria = cat ? cat.nombre : "";
+      let mod = modelosById[String(recursos[i].modelo)];//a partir del recurso, obtengo el id del modelo del recurso
+      let cat = mod ? categoriasById[mod.categoria] : null; // si el modelo existe, cojo su categoria, si no existe null
+      let nombreCategoria = cat ? cat.nombre : ""; //obtengo el nombre de la categoria
 
       peticionesPendientes++; // Incrementamos por la petición de reservas
 
       // 2. Pedir las reservas del recurso
       rest("GET", conToken("/api/recursos/" + recursos[i].id + "/reservas"), null, function(status2, reservas) {
-        if (status2 >= 200 && status2 < 300 && reservas && reservas.length > 0) {
+        if (status2 >= 200 && status2 < 300 && reservas && reservas.length > 0) { //comprueba que las reservas han llegado bien y no estan vacias
           for (let j = 0; j < reservas.length; j++) {
             let r = reservas[j];
 
@@ -674,7 +674,7 @@ function enviarDatosAlMinisterio() {
                   nombre: sanitario.nombre,
                   apellidos: sanitario.apellidos,
                   categoría: nombreCategoria,
-                  horas_estimadas: Number(r.horas_estimadas),
+                  horas_estimadas: Number(r.horas_estimadas), //convierte en valor numero las horas
                   fec_pet: r.fecha_peticion,                 
                   fec_ini: r.fecha_inicio || null,           
                   fecha_fin: r.fecha_fin || null
@@ -686,42 +686,42 @@ function enviarDatosAlMinisterio() {
               }
 
               peticionesPendientes--; // Descuenta la petición del sanitario
-              comprobarYEnviar();
+              comprobarYEnviar(); //comrpueba si era la ultima peticion
             });
           }
         }
 
         peticionesPendientes--; // Descuenta la petición de reservas que acaba de finalizar
-        comprobarYEnviar();
+        comprobarYEnviar(); //comprueba si era la ultima peticion
       });
     }
   });
 
   // Comprueba si ya han respondido todas las peticiones asíncronas
   function comprobarYEnviar() {
-    if (peticionesPendientes > 0) return;
+    if (peticionesPendientes > 0) return; //si aun quedan peticiones no hace nada y se sale, llama despues de cada respuesta, pero solo sigue adelante si el contador es 0
 
-    if (reservasValidas.length === 0) {
+    if (reservasValidas.length === 0) { //i la caja esta vacia no tiene sentido mandarla
       alert("No hay reservas válidas de Psiquiatría para enviar.");
       return;
     }
 
-    fetch("https://undefined.ua.es/telemedicina/api/datos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    fetch("https://undefined.ua.es/telemedicina/api/datos", { //mismmo fetch que GET, pero tiene 2 parametros con las opciones:
+      method: "POST", //método, por defecto un fetch hace GET, aqui le indica que es POST
+      headers: { "Content-Type": "application/json" },//aviso de que lo que estoy mandando es en formato JSON
+      body: JSON.stringify({//convierto el objeto JS en texto
         id_area: 16,
-        fecha: new Date().toISOString().substring(0, 10),
+        fecha: new Date().toISOString().substring(0, 10), //fecha y hora actual, formato largo de isos, cojo solo 10 primeros caracteres que es el formato de la practica
         datos: reservasValidas
       })
     })
     .then(function (respuesta) {
-      if (respuesta.ok) {
+      if (respuesta.ok) {//true si todo ha ido bien
         alert("¡Envío realizado con éxito al Ministerio!");
         cargarReservasMinisterio(); // Refresca la tabla del ranking
-      } else {
+      } else {//si el ministerio lo rechaza
         respuesta.text().then(function (texto) {
-          console.log("Estado:", respuesta.status, "Cuerpo:", texto);
+          console.log("Estado:", respuesta.status, "Cuerpo:", texto);//me muesta en la consola el msje de error y codigo para ver que ha fallado
         });
         alert("El Ministerio ha rechazado el envío.");
       }
