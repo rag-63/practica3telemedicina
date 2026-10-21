@@ -651,6 +651,37 @@ function ejercicio2() {
 
 }
 
+//EJERCICIO 1
+function ejercicio1() {
+  var conteoTotal = 0;
+  var areaEscrita = document.getElementById("input-area").value; //me da lo q ha escrito la persona 
+
+  fetch("https://undefined.ua.es/telemedicina/api/datos")
+        .then(function (respuesta) {
+            return respuesta.json();
+        })
+        .then(function (datosMinisterio) {
+            if (datosMinisterio && datosMinisterio.length){
+              for (var i = 0; i < datosMinisterio.length; i++){
+                var id_area = datosMinisterio[i].id_area;
+                var todasLasReservas = datosMinisterio[i].datos;
+
+                if (!Array.isArray(todasLasReservas)) continue;
+
+                if (id_area == areaEscrita){ //cuenta el are d la paernosa
+                  for (var j = 0; j < todasLasReservas.length; j++){
+                    conteoTotal++;
+                  }
+                }
+              }
+            }
+            alert("Registros del área " + areaEscrita + ": " + conteoTotal);
+        })
+        .catch(function (error) {
+            console.log("Error al conectar con el Ministerio:", error);
+        });
+}
+
 /////////////////////////////////////////////////
 // POST
 /////////////////////////////////////////////////
