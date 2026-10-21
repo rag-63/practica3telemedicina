@@ -619,6 +619,38 @@ function rellenarTabla(conteoPorArea){
   }
 }
 
+function ejercicio2() {
+  var conteoTotal = 0; // contador de reservas, empieza en 0
+
+  fetch("https://undefined.ua.es/telemedicina/api/datos")
+        .then(function (respuesta) { // lo que hago es recoger la respuesta del enlace, la convierto a texto para poder trabajar sobre ella
+            return respuesta.json();
+        })
+        .then(function (datosMinisterio) {
+            if (datosMinisterio && datosMinisterio.length){// recorre todos los envíos
+              for (var i = 0; i < datosMinisterio.length; i++){
+                var id_area = datosMinisterio[i].id_area;
+                var todasLasReservas = datosMinisterio[i].datos;
+
+                if (!Array.isArray(todasLasReservas)) continue; // he comprabado si un envío viene sin datos, y lo he saltado
+
+                if ( id_area == 16){ // recorre las reservas de mi área y sumo 1 por cada envía que hemos hecho
+                  for (var j = 0; j < todasLasReservas.length; j++){
+                    if (todasLasReservas[j].fecha_fin){ //compruebo que las reservas han finalizado
+                      conteoTotal++; //sumo todas las reservas
+                    }
+                  }
+                }
+              }
+            }
+            alert("Reservas total de Área Psiquiatría finalizadas: " + conteoTotal);
+        })
+        .catch(function (error) {
+            console.log("Error al conectar con el Ministerio:", error);
+        });
+
+}
+
 /////////////////////////////////////////////////
 // POST
 /////////////////////////////////////////////////
