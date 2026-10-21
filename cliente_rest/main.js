@@ -675,7 +675,7 @@ function ejercicio1() {
                 }
               }
             }
-            alert("Registros del área " + areaEscrita + ": " + conteoTotal);
+            alert("Existen" + conteoTotal + "resgistros del área de " + areaEscrita);
         })
         .catch(function (error) {
             console.log("Error al conectar con el Ministerio:", error);
